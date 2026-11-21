@@ -129,8 +129,8 @@ footer b{color:var(--txt)}
 @keyframes flap{0%{transform:rotateX(90deg);opacity:.2}100%{transform:rotateX(0);opacity:1}}
 
 /* ---------- TV mode ---------- */
-body.tv{overflow:hidden}
-body.tv .wrap{position:fixed;left:0;top:0;width:var(--tw);height:var(--th);max-width:none;padding:14px 22px 16px;transform:scale(var(--tz));transform-origin:0 0;display:flex;flex-direction:column}
+body.tv{overflow:auto}
+body.tv .wrap{position:absolute;left:var(--tl,0px);top:var(--tt,0px);width:var(--tw);height:var(--th);max-width:none;padding:14px 22px 16px;transform:scale(var(--tz));transform-origin:0 0;display:flex;flex-direction:column}
 body.tv header{flex:none;padding:0 0 10px}
 body.tv h1{font-size:38px}
 body.tv .eyebrow{font-size:14px}
@@ -167,6 +167,7 @@ body.tv .wxlabel{font-size:15px;padding:6px 20px}
 body.tv .wxi{font-size:23px}body.tv .wxi .k{font-size:17px}body.tv .wxi .e{font-size:30px}
 body.tv .wxset{padding-top:9px;padding-bottom:9px;gap:36px}
 body.tv #banner>div:nth-child(2){display:none}
+.tvnav{display:none}body.tv .tvnav{display:flex;position:fixed;right:10px;bottom:10px;gap:6px;z-index:50;opacity:.4}body.tv .tvnav:hover,body.tv .tvnav:focus-within{opacity:1}.tvnav button{width:44px;height:44px;border-radius:10px;border:1px solid #2a4560;background:#0a1b30;color:#d9e3f0;font:700 18px var(--mono);cursor:pointer}
 @media (prefers-reduced-motion:reduce){.flap,.chip.live i,.alert.red{animation:none}}
 </style>
 </head>
@@ -234,6 +235,8 @@ body.tv #banner>div:nth-child(2){display:none}
   </footer>
 </div>
 
+<div id="tvnav" class="tvnav"><button id="tvUp" aria-label="Scroll up">&#9650;</button><button id="tvDn" aria-label="Scroll down">&#9660;</button><button id="tvSm" aria-label="Shrink to fit" title="Shrink to fit">&minus;</button><button id="tvLg" aria-label="Grow" title="Grow">+</button></div>
+
 <div id="modal"><div class="card">
   <h3>Settings</h3>
   <label>LATITUDE</label><input id="inLat" inputmode="decimal">
@@ -249,14 +252,23 @@ body.tv #banner>div:nth-child(2){display:none}
 const $=s=>document.querySelector(s);
 /* TV mode: lay out for 1600 CSS px, then scale to the screen */
 let TVZ=1;
+function tvSafe(){let v=0;try{v=+localStorage.getItem('skywatch-safe')||0}catch(e){}return v}
 function applyTV(){
   let on,q=/[?&]tv=(1|0)/.exec(location.search),p=null;
   try{p=localStorage.getItem('skywatch-tv')}catch(e){}
   on=q?q[1]==='1':(p==='1'||(p!=='0'&&innerWidth>=1700));
   document.body.classList.toggle('tv',on);
-  if(on){TVZ=innerWidth/1600;const st=document.documentElement.style;
-    st.setProperty('--tz',TVZ);st.setProperty('--tw',(innerWidth/TVZ)+'px');st.setProperty('--th',(innerHeight/TVZ)+'px')}
-  else TVZ=1;
+  const st=document.documentElement.style;
+  if(on){
+    const vv=window.visualViewport,de=document.documentElement;
+    const vw=Math.min(innerWidth,de.clientWidth||1e9),vh=Math.min(innerHeight,de.clientHeight||1e9,(vv&&vv.height)||1e9);
+    const sm=/[?&]safe=(\d+(?:\.\d+)?)/.exec(location.search);
+    if(sm){try{localStorage.setItem('skywatch-safe',sm[1])}catch(e){}}
+    const safe=Math.max(0,Math.min(12,sm?+sm[1]:tvSafe())),ix=vw*safe/100,iy=vh*safe/100;
+    TVZ=(vw-2*ix)/1600;
+    st.setProperty('--tz',TVZ);st.setProperty('--tw','1600px');st.setProperty('--th',((vh-2*iy)/TVZ)+'px');
+    st.setProperty('--tl',ix+'px');st.setProperty('--tt',iy+'px');
+  }else TVZ=1;
 }
 applyTV();window.addEventListener('resize',applyTV);
 
@@ -690,6 +702,12 @@ $('#radar').addEventListener('pointerdown',e=>{const r=e.currentTarget.getBoundi
 function markRange(){document.querySelectorAll('#rangeSeg button').forEach(b=>b.classList.toggle('on',+b.dataset.r===cfg.range))}
 document.querySelectorAll('#rangeSeg button').forEach(b=>b.onclick=()=>{cfg.range=+b.dataset.r;sSet('skywatch-cfg-v1',cfg);markRange()});markRange();
 const modal=$('#modal');
+function tvFit(d){let v=Math.max(0,Math.min(12,tvSafe()+d));try{localStorage.setItem('skywatch-safe',v)}catch(e){}
+  if(/[?&]safe=/.test(location.search)){try{history.replaceState(null,'',location.pathname+(/[?&]tv=1/.test(location.search)?'?tv=1':''))}catch(e){}}
+  applyTV()}
+$('#tvSm').onclick=()=>tvFit(1);$('#tvLg').onclick=()=>tvFit(-1);
+$('#tvUp').onclick=()=>window.scrollBy({top:-innerHeight*0.6,behavior:'smooth'});
+$('#tvDn').onclick=()=>window.scrollBy({top:innerHeight*0.6,behavior:'smooth'});
 $('#tvbtn').onclick=()=>{const on=document.body.classList.contains('tv');
   try{localStorage.setItem('skywatch-tv',on?'0':'1')}catch(e){}
   if(/[?&]tv=/.test(location.search)){try{history.replaceState(null,'',location.pathname)}catch(e){}}
