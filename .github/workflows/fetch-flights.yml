@@ -1,0 +1,48 @@
+name: fetch-flights
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fetch-flights
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Fetch aircraft near home
+        env:
+          LAT: '34.185'
+          LON: '-83.924'
+          NM: '40'
+        run: |
+          mkdir -p out
+          ok=0
+          used=none
+          for u in \
+            "https://api.adsb.lol/v2/point/$LAT/$LON/$NM" \
+            "https://api.airplanes.live/v2/point/$LAT/$LON/$NM" \
+            "https://opendata.adsb.fi/api/v2/lat/$LAT/lon/$LON/dist/$NM"; do
+            if curl -fsS --max-time 20 -A 'mrbsfabrik-sky/1.0' "$u" -o raw.json \
+               && jq -e '(.ac // .aircraft) | type == "array"' raw.json > /dev/null; then
+              ok=1
+              used=$(echo "$u" | cut -d/ -f3)
+              break
+            fi
+            echo "feed failed: $u"
+          done
+          now_ms=$(( $(date +%s) * 1000 ))
+          if [ "$ok" = 1 ]; then
+            jq -c --argjson t "$now_ms" --arg s "$used" \
+              '{fetched_ms: $t, source: $s, ac: (.ac // .aircraft)}' raw.json > out/data.json
+          else
+            echo "{\"fetched_ms\":$now_ms,\"source\":\"none\",\"error\":\"all feeds failed\",\"ac\":[]}" > out/data.json
+          fi
+          echo "wrote $(wc -c < out/data.json) bytes from $used"
