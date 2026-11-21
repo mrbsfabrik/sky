@@ -127,6 +127,23 @@ footer b{color:var(--txt)}
 @keyframes pulse{50%{opacity:.35}}
 @keyframes blink{50%{background:#3d1010}}
 @keyframes flap{0%{transform:rotateX(90deg);opacity:.2}100%{transform:rotateX(0);opacity:1}}
+
+/* ---------- TV mode ---------- */
+body.tv{overflow:hidden}
+body.tv .wrap{position:fixed;left:0;top:0;width:var(--tw);height:var(--th);max-width:none;padding:14px 22px 16px;transform:scale(var(--tz));transform-origin:0 0;display:flex;flex-direction:column}
+body.tv header{flex:none;padding:0 0 10px}
+body.tv h1{font-size:38px}
+body.tv .eyebrow{font-size:14px}
+body.tv .chip{font-size:15px;padding:8px 14px}
+body.tv .grid{flex:1;min-height:0;gap:10px;grid-template-columns:1fr 1.25fr 1fr;grid-template-rows:repeat(12,minmax(0,1fr));grid-template-areas:"hero radar board" "hero radar board" "hero radar board" "hero radar board" "hero radar board" "hero radar board" "hero radar board" "sky radar tally" "sky radar tally" "sky radar tally" "sky radar tally" "sky radar tally"}
+body.tv #heroSec{grid-area:hero}body.tv #radarSec{grid-area:radar}body.tv #skySec{grid-area:sky}body.tv #boardSec{grid-area:board}body.tv #tallySec{grid-area:tally}
+body.tv .panel{overflow:hidden;padding:12px}body.tv .air{display:none}body.tv .call{font-size:54px;margin:4px 0 0}body.tv .stat{padding:6px 9px}body.tv .stat b{font-size:17px}body.tv .route{margin:6px 0 2px}body.tv .route .rr{font-size:24px}body.tv .flags{margin-top:4px}body.tv .gh{padding:5px 2px 4px}body.tv .grp{margin-top:2px}body.tv .row{padding:5px 8px;margin-top:3px}body.tv .stats{gap:6px;margin-top:8px}
+body.tv .ph h2{font-size:14px}
+body.tv #radar{width:min(100%,calc(var(--th) - 200px));margin:0 auto}
+body.tv #sky{width:min(100%,calc(var(--th)*0.28 - 20px));margin:0 auto}
+body.tv .cap,body.tv footer,body.tv .hours,body.tv .hl,body.tv #gear{display:none}
+body.tv .banner{padding:5px 12px;font-size:13px;line-height:1.3;margin-bottom:8px;flex:none}body.tv .banner button,body.tv .banner code,body.tv .banner .mono{display:none}body.tv #alerts{flex:none;margin-bottom:8px}
+@media (min-width:1700px){.tvbtn-hint{display:none}}
 @media (prefers-reduced-motion:reduce){.flap,.chip.live i,.alert.red{animation:none}}
 </style>
 </head>
@@ -139,6 +156,7 @@ footer b{color:var(--txt)}
     </div>
     <div class="hdr-r">
       <span id="chip" class="chip"><i></i><span id="chipTxt">CONNECTING</span></span>
+      <button id="tvbtn" class="iconbtn" aria-label="TV mode" title="TV mode">&#128250;</button>
       <button id="gear" class="iconbtn" aria-label="Settings">&#9881;</button>
     </div>
   </header>
@@ -201,6 +219,19 @@ footer b{color:var(--txt)}
 (()=>{
 'use strict';
 const $=s=>document.querySelector(s);
+/* TV mode: lay out for 1600 CSS px, then scale to the screen */
+let TVZ=1;
+function applyTV(){
+  let on,q=/[?&]tv=(1|0)/.exec(location.search),p=null;
+  try{p=localStorage.getItem('skywatch-tv')}catch(e){}
+  on=q?q[1]==='1':(p==='1'||(p!=='0'&&innerWidth>=1700));
+  document.body.classList.toggle('tv',on);
+  if(on){TVZ=Math.max(1,innerWidth/1600);const st=document.documentElement.style;
+    st.setProperty('--tz',TVZ);st.setProperty('--tw',(innerWidth/TVZ)+'px');st.setProperty('--th',(innerHeight/TVZ)+'px')}
+  else TVZ=1;
+}
+applyTV();window.addEventListener('resize',applyTV);
+
 const D2R=Math.PI/180, MI_KT=1.15078;
 const NS=null;
 const sGet=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}};
@@ -250,7 +281,9 @@ const SNAP=[
 ];
 
 /* ---------- state ---------- */
-let MODE='connecting';             // connecting | live | replay
+let MODE='connecting';             // connecting | live | recent | replay
+const RECENT_URL='https://raw.githubusercontent.com/mrbsfabrik/sky/data/data.json';
+let dataFetched=0, dataSource='', dataErr='', recentCycles=0;
 const SPEED=20, LOOP_MIN=20, PASS_MS=20*60000;
 let replayStart=performance.now(), replayK=0;
 const AC=new Map(), H=new Map(), ROUTES=new Map();
@@ -298,7 +331,7 @@ function ingest(list,tPoll){
   for(const [hex,a] of AC) if(!seen.has(hex)&&tPoll-a.lastSeen>45000)AC.delete(hex);
 }
 function derive(a,t){
-  const mx=MODE==='replay'?3.6e6:25e3;
+  const mx=MODE==='replay'?3.6e6:(MODE==='recent'?1.2e6:25e3);
   let lat=a.lat,lon=a.lon,alt=a.alt;const age=t-a.tb;
   const moving=!a.ground&&a.gs!=null&&a.trk!=null&&a.gs>20;
   if(moving&&age>0){const e=Math.min(age,mx),dm=a.gs*MI_KT*e/3.6e6,tr=a.trk*D2R;
@@ -306,7 +339,7 @@ function derive(a,t){
     if(alt!=null&&a.vr!=null)alt=Math.max(0,alt+a.vr*e/6e4)}
   const x=(lon-cfg.lon)*Math.cos(cfg.lat*D2R)*69.172,y=(lat-cfg.lat)*69.0,r=Math.hypot(x,y);
   const brg=(Math.atan2(x,y)/D2R+360)%360,altMi=(alt||0)/5280,slant=Math.hypot(r,altMi),elev=Math.atan2(altMi,r)/D2R;
-  const d={a,hex:a.hex,lat,lon,x,y,r,brg,alt,slant,elev,ground:a.ground,stale:MODE==='live'&&age>70e3,cls:classOf(a),vx:0,vy:0,cpaT:null,cpaD:null,status:'other'};
+  const d={a,hex:a.hex,lat,lon,x,y,r,brg,alt,slant,elev,ground:a.ground,stale:(MODE==='live'&&age>70e3)||(MODE==='recent'&&age>1.2e6),cls:classOf(a),vx:0,vy:0,cpaT:null,cpaD:null,status:'other'};
   if(moving){const v=a.gs*MI_KT;d.vx=v*Math.sin(a.trk*D2R);d.vy=v*Math.cos(a.trk*D2R);
     const tH=-(x*d.vx+y*d.vy)/(v*v);d.cpaT=tH*60;d.cpaD=Math.hypot(x+d.vx*tH,y+d.vy*tH)}
   return d}
@@ -367,14 +400,27 @@ async function fetchOne(url){
   try{const r=await fetch(url,{signal:ac.signal,cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);
     const j=await r.json();const list=j.ac||j.aircraft;if(!Array.isArray(list))throw new Error('bad shape');return list}
   finally{clearTimeout(to)}}
+async function fetchRecent(){
+  const ac=new AbortController();const to=setTimeout(()=>ac.abort(),9000);
+  try{const r=await fetch(RECENT_URL+'?t='+Math.floor(Date.now()/60000),{signal:ac.signal,cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);
+    const j=await r.json();if(!Array.isArray(j.ac)||!j.fetched_ms)throw new Error('bad shape');return j}
+  finally{clearTimeout(to)}}
 async function poll(){
-  const urls=sources();nSrc=urls.length;let ok=false;
-  for(let i=0;i<urls.length&&!ok;i++){const k=(srcIdx+i)%urls.length;
-    try{const list=await fetchOne(urls[k]);srcIdx=k;
-      if(MODE!=='live')setMode('live');
-      ingest(list,Date.now());lastPollOK=Date.now();pollFails=0;ok=true;ERRS={}}catch(e){noteErr(urls[k],e)}}
-  if(!ok){pollFails++;if(MODE!=='live')setMode('replay');renderBanner()}
-  setTimeout(poll,ok?8000:(MODE==='live'?15000:60000))}
+  let ok=false;
+  const tryLiveNow=MODE!=='recent'||recentCycles%10===0;
+  if(tryLiveNow){
+    const urls=sources();nSrc=urls.length;
+    for(let i=0;i<urls.length&&!ok;i++){const k=(srcIdx+i)%urls.length;
+      try{const list=await fetchOne(urls[k]);srcIdx=k;
+        if(MODE!=='live')setMode('live');
+        ingest(list,Date.now());lastPollOK=Date.now();pollFails=0;ok=true;ERRS={}}catch(e){noteErr(urls[k],e)}}}
+  if(!ok){
+    try{const j=await fetchRecent();
+      if(MODE!=='recent')setMode('recent');
+      dataFetched=j.fetched_ms;dataSource=j.source||'';dataErr=j.error||'';
+      ingest(j.ac,j.fetched_ms);lastPollOK=Date.now();pollFails=0;ok=true;recentCycles++;renderBanner()}
+    catch(e){noteErr(RECENT_URL,e);pollFails++;if(MODE!=='live'&&MODE!=='recent')setMode('replay');renderBanner()}}
+  setTimeout(poll,MODE==='live'&&ok?8000:(MODE==='recent'?60000:(MODE==='live'?15000:60000)))}
 function routeFor(a){
   const cs=a.call;if(MODE!=='live'||!/^[A-Z]{3}\d{1,4}[A-Z]?$/.test(cs))return null;
   if(ROUTES.has(cs))return ROUTES.get(cs);ROUTES.set(cs,null);
@@ -393,10 +439,17 @@ function legFor(d,rt){
 /* ---------- UI: banner / chip ---------- */
 function renderBanner(){
   const b=$('#banner');
-  if(MODE==='replay'){
+  if(MODE==='recent'){
     b.hidden=false;b.textContent='';
     const s=document.createElement('div');
-    s.innerHTML='<b>REPLAY &mdash; not live.</b> The live feed can&rsquo;t be reached from this viewer, so this is a replay of <b>real aircraft captured at about 3:43 PM ET on Nov 20, 2026</b>, moving at 20&times; speed (repeats every minute). Open this page from a normal browser tab or the downloaded file and it switches to live data on its own.';
+    s.innerHTML='<b>RECENT DATA &mdash; not live.</b> Your browser can&rsquo;t read the live feeds directly, so a scheduled GitHub job fetches the flights every few minutes and saves them. Last fetch: <b id="ageTxt">…</b>. Planes are moved forward along their paths by estimate, so a plane that has turned, landed or taken off since will be wrong.';
+    const dg=document.createElement('div');dg.style.cssText='margin-top:6px;font:11px/1.5 var(--mono);color:#c9a54e;word-break:break-all';
+    dg.textContent='data source: '+(dataSource||'?')+(dataErr?' · job error: '+dataErr:'');
+    b.append(s,dg)}
+  else if(MODE==='replay'){
+    b.hidden=false;b.textContent='';
+    const s=document.createElement('div');
+    s.innerHTML='<b>REPLAY &mdash; not live.</b> The live feed can&rsquo;t be reached from this viewer, so this is a replay of <b>real aircraft captured at about 3:43 PM ET on Nov 20, 2026</b>, moving at 20&times; speed (repeats every minute). The page switches to live data on its own wherever the live feeds allow it.';
     const bt=document.createElement('button');bt.textContent='RETRY LIVE FEED';bt.onclick=()=>{bt.textContent='TRYING…';tryLive()};
     const dg=document.createElement('div');dg.style.cssText='margin-top:8px;font:11px/1.5 var(--mono);color:#c9a54e;word-break:break-all';
     const lines=['page: '+location.protocol+'//'+(location.host||'(local file)')+(window.self!==window.top?' · inside a frame':' · top-level tab')];
@@ -410,6 +463,7 @@ function noteErr(u,e){let h=u;try{h=new URL(u).host}catch(x){}ERRS[h]=e&&e.name=
 function renderChip(t){
   const c=$('#chip'),tx=$('#chipTxt');c.className='chip';
   if(MODE==='live'){c.classList.add('live');const s=Math.max(0,Math.round((Date.now()-lastPollOK)/1000));tx.textContent=`LIVE · ${V.filter(d=>!d.ground).length} IN RANGE · ${s}s`}
+  else if(MODE==='recent'){c.classList.add('replay');const m=Math.max(0,Math.round((Date.now()-dataFetched)/60000));tx.textContent=`RECENT · ${V.filter(d=>!d.ground&&!d.stale).length} AIRBORNE · ${m} MIN OLD`;const ag=document.getElementById('ageTxt');if(ag)ag.textContent=m<1?'under a minute ago':m+' min ago'}
   else if(MODE==='replay'){c.classList.add('replay');tx.textContent='REPLAY ×20 · '+new Date(t).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}
   else tx.textContent='CONNECTING…'}
 
@@ -531,7 +585,7 @@ function renderTally(){
   $('#tallyNote').textContent=MODE==='replay'?'replay data':(MODE==='live'?'saved on this device':'')}
 
 /* ---------- canvases ---------- */
-function setup(c){const dpr=window.devicePixelRatio||1,w=Math.max(200,c.clientWidth);if(c.width!==Math.round(w*dpr)){c.width=Math.round(w*dpr);c.height=Math.round(w*dpr)}const x=c.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);return[x,w]}
+function setup(c){const dpr=(window.devicePixelRatio||1)*TVZ,w=Math.max(200,c.clientWidth);if(c.width!==Math.round(w*dpr)){c.width=Math.round(w*dpr);c.height=Math.round(w*dpr)}const x=c.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);return[x,w]}
 let radarHits=[];
 function plane(ctx,x,y,trk,s,col,fill){ctx.save();ctx.translate(x,y);ctx.rotate((trk||0)*D2R);ctx.beginPath();ctx.moveTo(0,-s);ctx.lineTo(s*.62,s*.85);ctx.lineTo(0,s*.4);ctx.lineTo(-s*.62,s*.85);ctx.closePath();ctx.fillStyle=fill?col:col+'55';ctx.strokeStyle=col;ctx.lineWidth=1.4;ctx.fill();ctx.stroke();ctx.restore()}
 function glyphSize(d){return d.a.cat==='A5'?9:d.a.cat==='A4'?8.5:d.a.cat==='A3'?7.5:d.a.cat==='A7'?6:5.5}
@@ -608,6 +662,10 @@ $('#radar').addEventListener('pointerdown',e=>{const r=e.currentTarget.getBoundi
 function markRange(){document.querySelectorAll('#rangeSeg button').forEach(b=>b.classList.toggle('on',+b.dataset.r===cfg.range))}
 document.querySelectorAll('#rangeSeg button').forEach(b=>b.onclick=()=>{cfg.range=+b.dataset.r;sSet('skywatch-cfg-v1',cfg);markRange()});markRange();
 const modal=$('#modal');
+$('#tvbtn').onclick=()=>{const on=document.body.classList.contains('tv');
+  try{localStorage.setItem('skywatch-tv',on?'0':'1')}catch(e){}
+  if(/[?&]tv=/.test(location.search)){try{history.replaceState(null,'',location.pathname)}catch(e){}}
+  applyTV()};
 $('#gear').onclick=()=>{$('#inLat').value=cfg.lat;$('#inLon').value=cfg.lon;$('#inOver').value=cfg.over;modal.classList.add('on')};
 $('#cx').onclick=()=>modal.classList.remove('on');
 $('#sv').onclick=()=>{const la=parseFloat($('#inLat').value),lo=parseFloat($('#inLon').value),ov=parseFloat($('#inOver').value);
