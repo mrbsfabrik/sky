@@ -140,34 +140,48 @@ body.tv #heroSec{grid-area:hero}body.tv #radarSec{grid-area:radar}body.tv #skySe
 body.tv .panel{overflow:hidden;padding:12px}body.tv .air{display:none}body.tv .tg{grid-template-columns:repeat(4,1fr)}body.tv .stats{grid-template-columns:repeat(3,1fr)}body.tv .call{font-size:54px;margin:4px 0 0}body.tv .stat{padding:6px 9px}body.tv .stat b{font-size:17px}body.tv .route{margin:6px 0 2px}body.tv .route .rr{font-size:24px}body.tv .flags{margin-top:4px}body.tv .gh{padding:5px 2px 4px}body.tv .grp{margin-top:2px}body.tv .row{padding:5px 8px;margin-top:3px}body.tv .stats{gap:6px;margin-top:8px}
 body.tv .ph h2{font-size:14px}
 body.tv #radar{width:min(100%,calc(var(--th) - 200px));margin:0 auto}
-body.tv #sky{width:min(100%,calc(var(--th)*0.28 - 20px));margin:0 auto}
+body.tv #sky{width:min(100%,calc(var(--th)*0.26 - 20px));margin:0 auto}
 body.tv .cap,body.tv footer,body.tv .hours,body.tv .hl,body.tv #gear{display:none}
 body.tv .banner{padding:5px 12px;font-size:13px;line-height:1.3;margin-bottom:8px;flex:none}body.tv .banner button,body.tv .banner code,body.tv .banner .mono{display:none}body.tv #alerts{flex:none;margin-bottom:8px}
 @media (min-width:1700px){.tvbtn-hint{display:none}}
 
 /* ---------- weather strip ---------- */
-.wx{display:flex;align-items:stretch;margin-top:12px;border:1px solid #1f3a57;border-radius:14px;overflow:hidden;position:relative;background:linear-gradient(90deg,#0a1b30,#102a46 50%,#0a1b30);box-shadow:0 -1px 0 #0b1624,0 0 24px #0a2a4a55}
-.wx::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,var(--amber),var(--cyan) 60%,transparent);opacity:.8}
-.wxlabel{flex:none;display:flex;flex-direction:column;justify-content:center;padding:6px 14px;background:#07121f;border-right:1px solid #1f3a57;font:700 11px var(--mono);letter-spacing:.16em;color:var(--cyan);line-height:1.4}
-.wxlabel small{font:600 10px var(--mono);color:var(--dim);letter-spacing:.08em}
+.wx{display:flex;align-items:stretch;margin-top:12px;border:1px solid #b6cade;border-radius:14px;overflow:hidden;position:relative;background:linear-gradient(90deg,#f7fafd,#e8f1fa 50%,#f7fafd);box-shadow:0 2px 14px #0a2a4a44;color:#14202e}
+.wx::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,#d6001c,#e8a400 35%,#0a8f3c 65%,#1f7fc4);opacity:.9;z-index:2}
+.wxlabel{flex:none;display:flex;flex-direction:column;justify-content:center;padding:6px 14px;background:#d9e7f4;border-right:1px solid #b6cade;font:700 11px var(--mono);letter-spacing:.16em;color:#0b5a86;line-height:1.4}
+.wxlabel small{font:600 10px var(--mono);color:#51657a;letter-spacing:.08em}
+.wxnow{flex:none;display:flex;align-items:center;gap:10px;padding:6px 18px 6px 14px;border-right:1px solid #b6cade;background:#fff;white-space:nowrap}
+.wxnow .e{font-size:34px;line-height:1;font-family:system-ui,'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif}
+.wxnow b{display:block;font:800 22px/1.1 var(--mono);color:#0b2239}
+.wxnow small{display:block;font:600 12px/1.3 var(--mono);color:#51657a;margin-top:2px}
 .wxview{flex:1;min-width:0;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 24px,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(90deg,transparent,#000 24px,#000 calc(100% - 24px),transparent)}
 .wxtrack{display:flex;width:max-content;animation:wxscroll var(--wxdur,90s) linear infinite}
 .wxview:hover .wxtrack{animation-play-state:paused}
 .wxset{display:flex;align-items:center;gap:26px;padding:11px 26px 11px 6px;white-space:nowrap}
-.wxi{display:inline-flex;align-items:baseline;gap:8px;font:600 15px var(--mono);color:var(--txt)}
-.wxi .k{color:var(--amber);letter-spacing:.08em;font-size:12px}
+.wxi{display:inline-flex;align-items:baseline;gap:8px;font:600 15px var(--mono);color:#14202e}
+.wxi .k{color:#a85a00;letter-spacing:.08em;font-size:12px;font-weight:700}
 .wxi .e{font-size:20px;line-height:1;font-family:system-ui,'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif}
-.wxi .d{color:var(--dim);font-weight:500}
-.wxi.warn{color:#ff9a9a}.wxi.warn .k{color:#ff6b6b}
-.wxi.sep{color:#2a4560}
+.wxi .d{color:#51657a;font-weight:500}
+.wxi.warn{color:#b00020}.wxi.warn .k{color:#b00020}
+.wxi.sep{color:#9fb4c8}
+.wxi.xmas{font:800 19px var(--mono);letter-spacing:.06em;animation:xmasblink 1.1s steps(1) infinite,xmascolor 3.3s steps(1) infinite;text-shadow:0 1px 0 #fff}
+@keyframes xmasblink{0%{opacity:1}55%{opacity:.12}75%{opacity:1}}
+@keyframes xmascolor{0%{color:#d6001c}33%{color:#0a8f3c}66%{color:#c47f00}}
 @keyframes wxscroll{to{transform:translateX(-50%)}}
-@media (prefers-reduced-motion:reduce){.wxtrack{animation:none}.wxview{overflow-x:auto}}
+@media (prefers-reduced-motion:reduce){.wxtrack,.wxi.xmas{animation:none}.wxi.xmas{color:#d6001c}.wxview{overflow-x:auto}}
 body.tv .wx{flex:none;margin-top:0}
 body.tv .wxlabel{font-size:15px;padding:6px 20px}
-body.tv .wxi{font-size:23px}body.tv .wxi .k{font-size:17px}body.tv .wxi .e{font-size:30px}
+body.tv .wxi{font-size:23px}body.tv .wxi .k{font-size:17px}body.tv .wxi .e{font-size:30px}body.tv .wxi.xmas{font-size:28px}body.tv .wxnow{padding:6px 22px 6px 18px}body.tv .wxnow .e{font-size:44px}body.tv .wxnow b{font-size:30px}body.tv .wxnow small{font-size:15px}
 body.tv .wxset{padding-top:9px;padding-bottom:9px;gap:36px}
 body.tv #banner>div:nth-child(2){display:none}
-.tvnav{display:none}body.tv .tvnav{display:flex;position:fixed;right:10px;bottom:10px;gap:6px;z-index:50;opacity:.4}body.tv .tvnav:hover,body.tv .tvnav:focus-within{opacity:1}.tvnav button{width:44px;height:44px;border-radius:10px;border:1px solid #2a4560;background:#0a1b30;color:#d9e3f0;font:700 18px var(--mono);cursor:pointer}
+.tvnav{display:none}
+body.tv .tvnav{display:inline-flex;gap:6px}
+.tvnav button{height:40px;min-width:44px;padding:0 12px;border-radius:10px;border:1px solid #2a4560;background:#0a1b30;color:#d9e3f0;font:700 15px var(--mono);cursor:pointer}
+.tvnav button:hover{border-color:var(--cyan);color:#fff}
+#wxfix{display:none}
+body.tv #wxfix{display:block;position:fixed;left:var(--tl,0px);bottom:var(--tt,0px);width:var(--tw,1600px);padding:0 22px 16px;transform:scale(var(--tz,1));transform-origin:0 100%;z-index:40}
+body.tv .wrap{padding-bottom:84px}
+
 @media (prefers-reduced-motion:reduce){.flap,.chip.live i,.alert.red{animation:none}}
 </style>
 </head>
@@ -180,6 +194,7 @@ body.tv #banner>div:nth-child(2){display:none}
     </div>
     <div class="hdr-r">
       <span id="chip" class="chip"><i></i><span id="chipTxt">CONNECTING</span></span>
+      <span id="tvnav" class="tvnav"><button id="tvSm" aria-label="Shrink to fit">FIT &minus;</button><button id="tvLg" aria-label="Grow">FIT +</button><button id="tvUp" aria-label="Scroll up">&#9650;</button><button id="tvDn" aria-label="Scroll down">&#9660;</button></span>
       <button id="tvbtn" class="iconbtn" aria-label="TV mode" title="TV mode">&#128250;</button>
       <button id="gear" class="iconbtn" aria-label="Settings">&#9881;</button>
     </div>
@@ -227,6 +242,7 @@ body.tv #banner>div:nth-child(2){display:none}
 
   <div id="wx" class="wx" hidden>
     <div class="wxlabel">WEATHER<small id="wxUpd"></small></div>
+    <div class="wxnow" id="wxNow" hidden></div>
     <div class="wxview"><div class="wxtrack" id="wxTrack"></div></div>
   </div>
 
@@ -235,7 +251,7 @@ body.tv #banner>div:nth-child(2){display:none}
   </footer>
 </div>
 
-<div id="tvnav" class="tvnav"><button id="tvUp" aria-label="Scroll up">&#9650;</button><button id="tvDn" aria-label="Scroll down">&#9660;</button><button id="tvSm" aria-label="Shrink to fit" title="Shrink to fit">&minus;</button><button id="tvLg" aria-label="Grow" title="Grow">+</button></div>
+<div id="wxfix"></div>
 
 <div id="modal"><div class="card">
   <h3>Settings</h3>
@@ -258,6 +274,7 @@ function applyTV(){
   try{p=localStorage.getItem('skywatch-tv')}catch(e){}
   on=q?q[1]==='1':(p==='1'||(p!=='0'&&innerWidth>=1700));
   document.body.classList.toggle('tv',on);
+  {const w=document.getElementById('wx'),f=document.getElementById('wxfix');if(w&&f){if(on){if(w.parentNode!==f)f.append(w)}else if(w.parentNode===f){const wr=document.querySelector('.wrap');wr.insertBefore(w,wr.querySelector('footer'))}}}
   const st=document.documentElement.style;
   if(on){
     const vv=window.visualViewport,de=document.documentElement;
@@ -750,20 +767,22 @@ function wxItem(k,e,txt,d,cls){
   const b=document.createElement('span');b.textContent=txt;i.append(b);
   if(d){const a=document.createElement('span');a.className='d';a.textContent=d;i.append(a)}
   return i}
+function xmasItem(){const i=document.createElement('span');i.className='wxi xmas';i.textContent='🎄 MERRY CHRISTMAS, MELANIE 🎄';return i}
 function renderWx(){
-  const box=$('#wx'),tr=$('#wxTrack');
+  const box=$('#wx'),tr=$('#wxTrack'),nw=$('#wxNow');
   box.hidden=false;
-  if(!WX){tr.style.animation='none';tr.textContent='';const set=document.createElement('div');set.className='wxset';set.append(wxItem('','⚠️','Weather unavailable'+(wxErr?' ('+wxErr+')':'')));tr.append(set);$('#wxUpd').textContent='';return}
+  if(!WX){nw.hidden=true;tr.style.animation='none';tr.textContent='';const set=document.createElement('div');set.className='wxset';set.append(xmasItem());set.append(wxItem('','⚠️','Weather unavailable'+(wxErr?' ('+wxErr+')':'')));tr.append(set);$('#wxUpd').textContent='';return}
   const c=WX.current,H=WX.hourly,D=WX.daily,items=[];
   WXA.forEach(a=>items.push(wxItem('ALERT','⚠️',a.event,a.ends?' until '+new Date(a.ends).toLocaleString([], {weekday:'short',hour:'numeric',minute:'2-digit'}):'','warn')));
   const [ce,ct]=WMO(c.weather_code);
-  items.push(wxItem('NOW',ce,Math.round(c.temperature_2m)+'°F '+ct,'feels '+Math.round(c.apparent_temperature)+'° · humidity '+Math.round(c.relative_humidity_2m)+'%'));
-  items.push(wxItem('WIND','💨',dir16(c.wind_direction_10m)+' '+Math.round(c.wind_speed_10m)+' mph','gusts '+Math.round(c.wind_gusts_10m)));
+  nw.hidden=false;nw.textContent='';
+  {const e=document.createElement('span');e.className='e';e.textContent=ce;const d=document.createElement('div');const b=document.createElement('b');b.textContent=Math.round(c.temperature_2m)+'°F '+ct;const sm=document.createElement('small');sm.textContent='feels '+Math.round(c.apparent_temperature)+'° · '+dir16(c.wind_direction_10m)+' '+Math.round(c.wind_speed_10m)+' mph, gusts '+Math.round(c.wind_gusts_10m)+' · '+Math.round(c.relative_humidity_2m)+'% humidity';d.append(b,sm);nw.append(e,d)}
   items.push(wxItem('SUN','🌅',tm12(D.sunrise[0]),'sunrise')); items.push(wxItem('','🌇',tm12(D.sunset[0]),'sunset'));
   let i0=H.time.findIndex(t=>t>c.time.slice(0,13)+':00');if(i0<0)i0=0;
   const picks=[];for(let k=0;k<6;k++)picks.push(i0+k);for(let k=8;k<=26;k+=3)picks.push(i0+k);
   picks.filter(i=>i<H.time.length).forEach(i=>{const [e]=WMO(H.weather_code[i]);items.push(wxItem(hr12(H.time[i]),e,Math.round(H.temperature_2m[i])+'°',H.precipitation_probability[i]+'% rain'))});
   for(let d=1;d<D.time.length;d++){const [e,t]=WMO(D.weather_code[d]);items.push(wxItem(dowOf(D.time[d]),e,Math.round(D.temperature_2m_max[d])+'°/'+Math.round(D.temperature_2m_min[d])+'°',t+' · '+D.precipitation_probability_max[d]+'% rain'))}
+  items.unshift(xmasItem());items.splice(Math.floor(items.length/2),0,xmasItem());
   tr.textContent='';tr.style.animation='';
   for(let n=0;n<2;n++){const set=document.createElement('div');set.className='wxset';items.forEach((it,ix)=>{set.append(n?it.cloneNode(true):it);const sp=document.createElement('span');sp.className='wxi sep';sp.textContent='•';set.append(sp)});tr.append(set)}
   tr.style.setProperty('--wxdur',Math.max(60,items.length*6)+'s');
