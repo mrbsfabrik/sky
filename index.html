@@ -137,13 +137,36 @@ body.tv .eyebrow{font-size:14px}
 body.tv .chip{font-size:15px;padding:8px 14px}
 body.tv .grid{flex:1;min-height:0;gap:10px;grid-template-columns:1fr 1.25fr 1fr;grid-template-rows:repeat(12,minmax(0,1fr));grid-template-areas:"hero radar board" "hero radar board" "hero radar board" "hero radar board" "hero radar board" "hero radar board" "hero radar board" "sky radar tally" "sky radar tally" "sky radar tally" "sky radar tally" "sky radar tally"}
 body.tv #heroSec{grid-area:hero}body.tv #radarSec{grid-area:radar}body.tv #skySec{grid-area:sky}body.tv #boardSec{grid-area:board}body.tv #tallySec{grid-area:tally}
-body.tv .panel{overflow:hidden;padding:12px}body.tv .air{display:none}body.tv .call{font-size:54px;margin:4px 0 0}body.tv .stat{padding:6px 9px}body.tv .stat b{font-size:17px}body.tv .route{margin:6px 0 2px}body.tv .route .rr{font-size:24px}body.tv .flags{margin-top:4px}body.tv .gh{padding:5px 2px 4px}body.tv .grp{margin-top:2px}body.tv .row{padding:5px 8px;margin-top:3px}body.tv .stats{gap:6px;margin-top:8px}
+body.tv .panel{overflow:hidden;padding:12px}body.tv .air{display:none}body.tv .tg{grid-template-columns:repeat(4,1fr)}body.tv .stats{grid-template-columns:repeat(3,1fr)}body.tv .call{font-size:54px;margin:4px 0 0}body.tv .stat{padding:6px 9px}body.tv .stat b{font-size:17px}body.tv .route{margin:6px 0 2px}body.tv .route .rr{font-size:24px}body.tv .flags{margin-top:4px}body.tv .gh{padding:5px 2px 4px}body.tv .grp{margin-top:2px}body.tv .row{padding:5px 8px;margin-top:3px}body.tv .stats{gap:6px;margin-top:8px}
 body.tv .ph h2{font-size:14px}
 body.tv #radar{width:min(100%,calc(var(--th) - 200px));margin:0 auto}
 body.tv #sky{width:min(100%,calc(var(--th)*0.28 - 20px));margin:0 auto}
 body.tv .cap,body.tv footer,body.tv .hours,body.tv .hl,body.tv #gear{display:none}
 body.tv .banner{padding:5px 12px;font-size:13px;line-height:1.3;margin-bottom:8px;flex:none}body.tv .banner button,body.tv .banner code,body.tv .banner .mono{display:none}body.tv #alerts{flex:none;margin-bottom:8px}
 @media (min-width:1700px){.tvbtn-hint{display:none}}
+
+/* ---------- weather strip ---------- */
+.wx{display:flex;align-items:stretch;margin-top:12px;border:1px solid #1f3a57;border-radius:14px;overflow:hidden;position:relative;background:linear-gradient(90deg,#0a1b30,#102a46 50%,#0a1b30);box-shadow:0 -1px 0 #0b1624,0 0 24px #0a2a4a55}
+.wx::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,var(--amber),var(--cyan) 60%,transparent);opacity:.8}
+.wxlabel{flex:none;display:flex;flex-direction:column;justify-content:center;padding:6px 14px;background:#07121f;border-right:1px solid #1f3a57;font:700 11px var(--mono);letter-spacing:.16em;color:var(--cyan);line-height:1.4}
+.wxlabel small{font:600 10px var(--mono);color:var(--dim);letter-spacing:.08em}
+.wxview{flex:1;min-width:0;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 24px,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(90deg,transparent,#000 24px,#000 calc(100% - 24px),transparent)}
+.wxtrack{display:flex;width:max-content;animation:wxscroll var(--wxdur,90s) linear infinite}
+.wxview:hover .wxtrack{animation-play-state:paused}
+.wxset{display:flex;align-items:center;gap:26px;padding:11px 26px 11px 6px;white-space:nowrap}
+.wxi{display:inline-flex;align-items:baseline;gap:8px;font:600 15px var(--mono);color:var(--txt)}
+.wxi .k{color:var(--amber);letter-spacing:.08em;font-size:12px}
+.wxi .e{font-size:20px;line-height:1;font-family:system-ui,'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif}
+.wxi .d{color:var(--dim);font-weight:500}
+.wxi.warn{color:#ff9a9a}.wxi.warn .k{color:#ff6b6b}
+.wxi.sep{color:#2a4560}
+@keyframes wxscroll{to{transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){.wxtrack{animation:none}.wxview{overflow-x:auto}}
+body.tv .wx{flex:none;margin-top:0}
+body.tv .wxlabel{font-size:15px;padding:6px 20px}
+body.tv .wxi{font-size:23px}body.tv .wxi .k{font-size:17px}body.tv .wxi .e{font-size:30px}
+body.tv .wxset{padding-top:9px;padding-bottom:9px;gap:36px}
+body.tv #banner>div:nth-child(2){display:none}
 @media (prefers-reduced-motion:reduce){.flap,.chip.live i,.alert.red{animation:none}}
 </style>
 </head>
@@ -201,6 +224,11 @@ body.tv .banner{padding:5px 12px;font-size:13px;line-height:1.3;margin-bottom:8p
     </section>
   </main>
 
+  <div id="wx" class="wx" hidden>
+    <div class="wxlabel">WEATHER<small id="wxUpd"></small></div>
+    <div class="wxview"><div class="wxtrack" id="wxTrack"></div></div>
+  </div>
+
   <footer>
     <b>How it works.</b> Aircraft broadcast their position by ADS-B; volunteers' ground receivers upload it to community feeds (adsb.lol, with airplanes.live and adsb.fi as backups). This page asks the feed for everything within about 46 miles, then works out distance, bearing, elevation angle and closest approach itself. Airline routes come from scheduled-route data and can differ from what a given flight is actually doing. Some aircraft are missing: no transponder, privacy-blocked registrations, and some military flights. Not for navigation. The map centre is the middle of ZIP 30542, not your street &mdash; set exact coordinates under &#9881;.
   </footer>
@@ -226,7 +254,7 @@ function applyTV(){
   try{p=localStorage.getItem('skywatch-tv')}catch(e){}
   on=q?q[1]==='1':(p==='1'||(p!=='0'&&innerWidth>=1700));
   document.body.classList.toggle('tv',on);
-  if(on){TVZ=Math.max(1,innerWidth/1600);const st=document.documentElement.style;
+  if(on){TVZ=innerWidth/1600;const st=document.documentElement.style;
     st.setProperty('--tz',TVZ);st.setProperty('--tw',(innerWidth/TVZ)+'px');st.setProperty('--th',(innerHeight/TVZ)+'px')}
   else TVZ=1;
 }
@@ -676,6 +704,54 @@ $('#geo').onclick=()=>{const m=$('#mmsg');if(!navigator.geolocation){m.textConte
 
 /* ---------- go ---------- */
 renderBanner();
+
+/* ---------- weather strip (Open-Meteo + NWS alerts, no keys) ---------- */
+const WMO=c=>c===0?['☀️','Clear']:c===1?['🌤️','Mostly clear']:c===2?['⛅','Partly cloudy']:c===3?['☁️','Overcast']:(c===45||c===48)?['🌫️','Fog']:(c>=51&&c<=57)?['🌦️','Drizzle']:(c>=61&&c<=67)?['🌧️','Rain']:(c>=71&&c<=77)?['❄️','Snow']:(c>=80&&c<=82)?['🌦️','Showers']:(c===85||c===86)?['🌨️','Snow showers']:(c>=95)?['⛈️','Thunderstorms']:['🌡️',''];
+let WX=null,WXA=[],wxErr='',wxAt=0;
+function hr12(t){const h=+t.slice(11,13);return (h%12||12)+(h<12?' AM':' PM')}
+function tm12(t){const h=+t.slice(11,13),m=t.slice(14,16);return (h%12||12)+':'+m+(h<12?' AM':' PM')}
+const DOW=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+function dowOf(t){return DOW[new Date(+t.slice(0,4),+t.slice(5,7)-1,+t.slice(8,10)).getDay()]}
+async function loadWx(){
+  try{
+    const u='https://api.open-meteo.com/v1/forecast?latitude='+cfg.lat+'&longitude='+cfg.lon+'&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m&hourly=temperature_2m,precipitation_probability,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=7';
+    const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);
+    const j=await r.json();if(!j.current||!j.hourly||!j.daily)throw new Error('bad shape');
+    WX=j;wxAt=Date.now();wxErr='';
+  }catch(e){wxErr=String(e&&e.message||e)}
+  try{
+    const r=await fetch('https://api.weather.gov/alerts/active?point='+cfg.lat+','+cfg.lon,{headers:{Accept:'application/geo+json'}});
+    if(r.ok){const j=await r.json();WXA=(j.features||[]).map(f=>f.properties).filter(p=>p&&p.event).slice(0,4)}
+  }catch(e){}
+  renderWx();
+}
+function wxItem(k,e,txt,d,cls){
+  const i=document.createElement('span');i.className='wxi'+(cls?' '+cls:'');
+  if(k){const a=document.createElement('span');a.className='k';a.textContent=k;i.append(a)}
+  if(e){const a=document.createElement('span');a.className='e';a.textContent=e;i.append(a)}
+  const b=document.createElement('span');b.textContent=txt;i.append(b);
+  if(d){const a=document.createElement('span');a.className='d';a.textContent=d;i.append(a)}
+  return i}
+function renderWx(){
+  const box=$('#wx'),tr=$('#wxTrack');
+  box.hidden=false;
+  if(!WX){tr.style.animation='none';tr.textContent='';const set=document.createElement('div');set.className='wxset';set.append(wxItem('','⚠️','Weather unavailable'+(wxErr?' ('+wxErr+')':'')));tr.append(set);$('#wxUpd').textContent='';return}
+  const c=WX.current,H=WX.hourly,D=WX.daily,items=[];
+  WXA.forEach(a=>items.push(wxItem('ALERT','⚠️',a.event,a.ends?' until '+new Date(a.ends).toLocaleString([], {weekday:'short',hour:'numeric',minute:'2-digit'}):'','warn')));
+  const [ce,ct]=WMO(c.weather_code);
+  items.push(wxItem('NOW',ce,Math.round(c.temperature_2m)+'°F '+ct,'feels '+Math.round(c.apparent_temperature)+'° · humidity '+Math.round(c.relative_humidity_2m)+'%'));
+  items.push(wxItem('WIND','💨',dir16(c.wind_direction_10m)+' '+Math.round(c.wind_speed_10m)+' mph','gusts '+Math.round(c.wind_gusts_10m)));
+  items.push(wxItem('SUN','🌅',tm12(D.sunrise[0]),'sunrise')); items.push(wxItem('','🌇',tm12(D.sunset[0]),'sunset'));
+  let i0=H.time.findIndex(t=>t>c.time.slice(0,13)+':00');if(i0<0)i0=0;
+  const picks=[];for(let k=0;k<6;k++)picks.push(i0+k);for(let k=8;k<=26;k+=3)picks.push(i0+k);
+  picks.filter(i=>i<H.time.length).forEach(i=>{const [e]=WMO(H.weather_code[i]);items.push(wxItem(hr12(H.time[i]),e,Math.round(H.temperature_2m[i])+'°',H.precipitation_probability[i]+'% rain'))});
+  for(let d=1;d<D.time.length;d++){const [e,t]=WMO(D.weather_code[d]);items.push(wxItem(dowOf(D.time[d]),e,Math.round(D.temperature_2m_max[d])+'°/'+Math.round(D.temperature_2m_min[d])+'°',t+' · '+D.precipitation_probability_max[d]+'% rain'))}
+  tr.textContent='';tr.style.animation='';
+  for(let n=0;n<2;n++){const set=document.createElement('div');set.className='wxset';items.forEach((it,ix)=>{set.append(n?it.cloneNode(true):it);const sp=document.createElement('span');sp.className='wxi sep';sp.textContent='•';set.append(sp)});tr.append(set)}
+  tr.style.setProperty('--wxdur',Math.max(60,items.length*6)+'s');
+  $('#wxUpd').textContent=new Date(wxAt).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+}
+loadWx();setInterval(loadWx,15*60e3);
 requestAnimationFrame(frame);
 setInterval(()=>tick(),1000);
 tick();
