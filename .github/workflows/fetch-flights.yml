@@ -47,6 +47,16 @@ jobs:
           fi
           echo "wrote $(wc -c < out/data.json) bytes from $used"
 
+      - name: Look up routes (best effort)
+        continue-on-error: true
+        run: |
+          cd out
+          mkdir -p ../routes
+          jq -r '.ac[]? | (.flight // empty) | gsub("\\s+$";"")' data.json | grep -E '^[A-Z]{3}[0-9]{1,4}[A-Z]?$' | sort -u > ../calls.txt || true
+          xargs -a ../calls.txt -P 8 -I{} sh -c 'curl -fsS --max-time 8 -A "mrbsfabrik-sky/1.0" "https://vrs-standing-data.adsb.lol/routes/$(echo {} | cut -c1-2)/{}.json" -o "../routes/{}.json" 2>/dev/null || rm -f "../routes/{}.json"' || true
+          for f in ../routes/*.json; do [ -e "$f" ] || continue; cs=$(basename "$f" .json); jq -c --arg cs "$cs" '{($cs): [._airports[]? | {iata, icao, name, location, lat, lon}]}' "$f"; done | jq -s 'add // {}' > ../routes.json || echo '{}' > ../routes.json
+          jq -c --slurpfile r ../routes.json '. + {routes: $r[0]}' data.json > data2.json && mv data2.json data.json
+
       - name: Publish to the data branch
         run: |
           cd out
